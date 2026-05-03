@@ -29,7 +29,7 @@ BOT_URL = os.getenv("BOT_URL", "http://127.0.0.1:8081")
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
 
 # Your API key (paste your key here)
-LLM_API_KEY = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY", "AIzaSyDJw3CbX6G4WCYiTABnSOmwe8jNVgz7qYA")
+LLM_API_KEY = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY", "")
 
 # Model to use (leave empty for default, or specify like "gpt-4o", "claude-3-5-sonnet-20241022", etc.)
 LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
