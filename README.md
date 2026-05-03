@@ -9,6 +9,13 @@ Rules-first FastAPI bot for the magicpin Vera AI Challenge. The bot makes determ
 - `/v1/reply` handles replay scenarios: auto-replies, explicit intent, hostile opt-outs, and off-topic replies.
 - Optional LLM polish order defaults to `groq,gemini`; local Ollama can be enabled for development with `LLM_PROVIDER_ORDER=ollama`.
 
+## Model Choice (and Why)
+
+- **Primary behavior**: rules-first composer (no external dependency) for deterministic, judge-safe outputs.
+- **Optional polish model**: Gemini 2.5 Flash Lite (default in env) for fast, low-latency copy refinement.
+- **Why this split**: the rules engine selects facts and CTAs; the LLM only improves wording. This keeps responses within the 30s budget and prevents hallucinated facts from impacting scores.
+- **Fallbacks**: if the LLM is slow or unavailable, responses degrade to the deterministic draft without failing the run.
+
 ## Run Locally
 
 ```bash
@@ -47,12 +54,17 @@ This repo includes a `start.sh` and `Procfile` for Render-style deploys.
 2. Build command: `pip install -r requirements.txt`
 3. Start command: `sh start.sh`
 4. Set env vars (optional but recommended):
-	- `TEAM_NAME`, `TEAM_MEMBERS`, `CONTACT_EMAIL`, `BOT_VERSION`, `SUBMITTED_AT`
-	- `LLM_POLISH_ENABLED=0` if you do not want to use an LLM key
-	- Or set `GROQ_API_KEY` / `GEMINI_API_KEY` for polish mode
+   - `TEAM_NAME`, `TEAM_MEMBERS`, `CONTACT_EMAIL`, `BOT_VERSION`, `SUBMITTED_AT`
+   - `LLM_POLISH_ENABLED=0` if you do not want to use an LLM key
+   - Or set `GROQ_API_KEY` / `GEMINI_API_KEY` for polish mode
 
 The server binds to `0.0.0.0` and uses Render's `PORT` if present (defaults to 8080).
 
 ## Tradeoffs
 
-The implementation optimizes reliability over free-form creativity. The LLM is not trusted to choose facts or CTAs; it can only polish an already-grounded draft and must pass validation. This protects against hallucination, rate limits, and the 30-second judge timeout while still allowing better wording when a fast API is available.
+The implementation optimizes reliability over free-form creativity:
+
+- **Reliability > creativity**: deterministic drafts always exist; LLM is optional and only used for polish.
+- **Speed > depth**: short, single-CTA messages are favored to fit the 30s judge timeout and reduce multi-turn risk.
+- **Context-only grounding**: no external data calls; avoids fabrication but limits personalization to provided context.
+- **Conservative safety checks**: strict validation may reject some otherwise good LLM outputs to keep outputs judge-safe.
